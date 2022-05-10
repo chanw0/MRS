@@ -1,0 +1,24 @@
+Package: MRS
+Type: Package
+Title: Microbial Risk Score Framework
+Version: 0.1.0
+Date: 2022-04-06
+Authors@R: c(
+    person("Chan", "Wang", email = "Chan.Wang@nyulangone.org", role = c("cre", "aut")),
+    person("Huilin", "Li", email = "Chan.Wang@nyulangone.org", role = "aut"))
+Description: The microbial risk score (MRS) framework converts the high-dimensional microbiome data into a summarized risk score MRS that can be used to measure and predict disease susceptibility. We proposed to employ the existing sophisticated microbial association tests, such as ANCOMBC, ALDEx2, and Maaslin2 to identify microbial taxa associated with disease using the discovery samples. We proposed to a community-based MRS, denoted by $MRS_\alpha$, which is defined the alpha diversity of the sub-community consisting of only the identified candidate taxa. Pruning and thresholding (P+T) method  and AUC evaluation is used to determine the identified taxa based on the discovery samples.
+License: GPL (>= 3)
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.2
+Depends: R (>= 4.1.0)
+Imports: 
+    ALDEx2,
+    ANCOMBC,
+    magrittr,
+    Maaslin2,
+    phyloseq,
+    pROC
+
+
+
