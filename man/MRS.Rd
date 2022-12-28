@@ -23,7 +23,7 @@ Three top-performing methods \href{https://www.nature.com/articles/s41467-020-17
 and \href{https://huttenhower.sph.harvard.edu/maaslin/}{Maaslin2} are available: c("ancombc", "ALDEx2","Maaslin2").}
 
 \item{measurement}{The diverity index which is employed for MRS calculation.
-Three widely used indices are available: c("Shannon","Simpson","Observed").}
+Three widely used indices are available: c("shannon","simpson","observed").}
 }
 \value{
 A list with components:
@@ -55,13 +55,13 @@ require(phyloseq)
 
  validation=GMHI[[2]];
 
- res=MRS(discovery, validation, GroupID="Group", DA.method="ancombc", measurement="Shannon")
+ res=MRS(discovery, validation, GroupID="Group", DA.method="ancombc", measurement="shannon")
 
  AUC=res[[3]]
 
  ## using ALDEx2 method and Shannon index
 
- res=MRS(discovery, validation, GroupID="Group", DA.method="ALDEx2", measurement="Shannon")
+ res=MRS(discovery, validation, GroupID="Group", DA.method="ALDEx2", measurement="shannon")
 
  AUC=res[[3]]
 
@@ -71,7 +71,7 @@ require(phyloseq)
  discovery.sub=prune_samples(sample_data(discovery)$Group1 \%in\% c("Healthy","CA"),discovery)
  validation.sub=prune_samples(sample_data(validation)$Group1 \%in\% c("Healthy","CA"),validation)
 
- res=MRS(discovery.sub, validation.sub, GroupID="Group", DA.method="ALDEx2", measurement="Shannon")
+ res=MRS(discovery.sub, validation.sub, GroupID="Group", DA.method="ALDEx2", measurement="shannon")
  AUC=res[[3]]
 
 }
