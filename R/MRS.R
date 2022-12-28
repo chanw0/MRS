@@ -26,7 +26,7 @@
 #'and \href{https://huttenhower.sph.harvard.edu/maaslin/}{Maaslin2} are available: c("ancombc", "ALDEx2","Maaslin2").
 #'
 #' @param measurement The diverity index which is employed for MRS calculation.
-#' Three widely used indices are available: c("Shannon","Simpson","Observed").
+#' Three widely used indices are available: c("shannon","simpson","observed").
 #'
 #' @return A list with components:
 #' \itemize{
@@ -45,13 +45,13 @@
 #'
 #'  validation=GMHI[[2]];
 #'
-#'  res=MRS(discovery, validation, GroupID="Group", DA.method="ancombc", measurement="Shannon")
+#'  res=MRS(discovery, validation, GroupID="Group", DA.method="ancombc", measurement="shannon")
 #'
 #'  AUC=res[[3]]
 #'
 #'  ## using ALDEx2 method and Shannon index
 #'
-#'  res=MRS(discovery, validation, GroupID="Group", DA.method="ALDEx2", measurement="Shannon")
+#'  res=MRS(discovery, validation, GroupID="Group", DA.method="ALDEx2", measurement="shannon")
 #'
 #'  AUC=res[[3]]
 #'
@@ -61,7 +61,7 @@
 #'  discovery.sub=prune_samples(sample_data(discovery)$Group1 %in% c("Healthy","CA"),discovery)
 #'  validation.sub=prune_samples(sample_data(validation)$Group1 %in% c("Healthy","CA"),validation)
 #'
-#'  res=MRS(discovery.sub, validation.sub, GroupID="Group", DA.method="ALDEx2", measurement="Shannon")
+#'  res=MRS(discovery.sub, validation.sub, GroupID="Group", DA.method="ALDEx2", measurement="shannon")
 #'  AUC=res[[3]]
 #'
 #'@importFrom magrittr "%>%"
@@ -70,6 +70,7 @@
 #'@import ALDEx2
 #'@import phyloseq
 #'@import pROC
+#'@import vegan
 #'
 #' @export
 MRS=function(discovery.data, validation.data, GroupID,
@@ -77,15 +78,17 @@ MRS=function(discovery.data, validation.data, GroupID,
 
   if(DA.method=="ancombc") {
 
-  out = ancombc(phyloseq = discovery.data, formula = GroupID,
+  out = ancombc2(data = discovery.data, fix_formula = GroupID,
                 p_adj_method = "BH",  #zero_cut = 0.90, #lib_cut = 1000,
                 group = GroupID, struc_zero = TRUE, neg_lb = TRUE,
-                tol = 1e-5, max_iter = 100, conserve = TRUE,
                 alpha = 0.05, global = FALSE)
 
-  res = out$res$p_val %>% as.matrix() %>% data.frame()
+  res0 = out$res
+  res = res0[,grep("p_",colnames(res0))[2]] %>% as.matrix() %>% data.frame()
+
   colnames(res)="pvalue"
-  res$prank=rank(res$pvalue) }
+  res$prank=rank(res$pvalue,ties.method ="min")
+  res$taxon=rownames(res0)}
 
   if(DA.method=="ALDEx2") {
 
@@ -98,7 +101,8 @@ MRS=function(discovery.data, validation.data, GroupID,
 
     res = res %>% as.matrix() %>% data.frame()
     colnames(res)[1]="pvalue"
-    res$prank=rank(res$pvalue) }
+    res$prank=rank(res$pvalue,ties.method ="min")
+    res$taxon=rownames(res) }
 
 
   if(DA.method=="Maaslin2") {
@@ -119,21 +123,22 @@ MRS=function(discovery.data, validation.data, GroupID,
     res=res$results[,c("feature","pval")]
     res = res %>% as.matrix() %>% data.frame()
     colnames(res)[2]="pvalue"
-    res$prank=rank(res$pvalue)
-    rownames(res)=res$feature }
+    res$prank=rank(res$pvalue,ties.method ="min")
+    colnames(res)[1]="taxon" }
 
 
   AUC.res=NULL
 
   for(nTop in  seq(5, nrow(res),1)) {
 
+    community.used=prune_taxa(res$taxon[res$prank<=nTop], discovery.data)
 
-    community.used=prune_taxa(rownames(res)[res$prank<=nTop], discovery.data)
+    AA=otu_table(community.used)
 
-    if(measurement!="Observed") {
+    if(measurement!="observed") {
 
-      erDF = estimate_richness(community.used, split = TRUE,measures=measurement)
-      Value=erDF[,1] } else Value=as.numeric(apply(otu_table(community.used),1, function(x) sum(x>0)))
+      erDF = diversity(AA,index=measurement)
+      Value=as.numeric(erDF)} else Value=as.numeric(apply(otu_table(community.used),1, function(x) sum(x>0)))
 
     roc1<- roc(status~Value,
                data=data.frame(status=as.character(unlist(sample_data(discovery.data)[,GroupID])),
@@ -144,14 +149,14 @@ MRS=function(discovery.data, validation.data, GroupID,
 
     pvalue.opt=seq(5, nrow(res),1)[which.max(AUC.res)]
 
-    Taxa_identified=rownames(res)[res$prank<=pvalue.opt]
-
+    Taxa_identified=res$taxon[res$prank<=pvalue.opt]
     community.used=prune_taxa(Taxa_identified, discovery.data)
+    AA=otu_table(community.used)
 
-    if(measurement!="Observed") {
+    if(measurement!="observed") {
 
-      erDF = estimate_richness(community.used, split = TRUE,measures=measurement)
-      Value=erDF[,1] } else Value=as.numeric(apply(otu_table(community.used),1, function(x) sum(x>0)))
+      erDF = diversity(AA,index=measurement)
+      Value=as.numeric(erDF) } else Value=as.numeric(apply(otu_table(community.used),1, function(x) sum(x>0)))
 
     roc1<- roc(status~Value,
                data=data.frame(status=as.character(unlist(sample_data(discovery.data)[,GroupID])),
@@ -160,11 +165,12 @@ MRS=function(discovery.data, validation.data, GroupID,
 
 
     community.used=prune_taxa(Taxa_identified, validation.data)
+    AA=otu_table(community.used)
 
-    if(measurement!="Observed") {
+    if(measurement!="observed") {
 
-      erDF = estimate_richness(community.used, split = TRUE,measures=measurement)
-      Value=erDF[,1] } else Value=as.numeric(apply(otu_table(community.used),1, function(x) sum(x>0)))
+      erDF = diversity(AA,index=measurement)
+      Value=as.numeric(erDF) } else Value=as.numeric(apply(otu_table(community.used),1, function(x) sum(x>0)))
 
     roc1<- roc(status~Value,
                data=data.frame(status=as.character(unlist(sample_data(validation.data)[,GroupID])),
