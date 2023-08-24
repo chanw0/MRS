@@ -48,8 +48,6 @@ AUC=res[[3]]
 
 ### Example 2 Evaluation of MRS in terms of comparison between Healthy and a specific disease Healthy vs. CA
 
-Calculate p-values based on 200 times of permutations in a single random data split 
-
 ```{r example3}
 discovery.sub=prune_samples(sample_data(discovery)$Group1 %in% c("Healthy","CA"),discovery)
 validation.sub=prune_samples(sample_data(validation)$Group1 %in% c("Healthy","CA"),validation)
