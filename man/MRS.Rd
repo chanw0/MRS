@@ -28,9 +28,9 @@ Three widely used indices are available: c("shannon","simpson","observed").}
 \value{
 A list with components:
 \itemize{
- \item{ Cutoff: An optimal p-value cutoff (a numeric value) for identifying the taxa used for construction of MRS.}
+\item{ Cutoff: An optimal p-value cutoff (a numeric value) for identifying the taxa used for construction of MRS.}
 \item{ Taxa used for MRS: The specific taxa used for construction of MRS.}
-\item{ AUC: A numeric matrix which reports the AUC values and 95% confidence intervals in
+\item{ AUC: A numeric matrix which reports the AUC values and 95\% confidence intervals in
 the discovery and validation cohorts, respectively.}}
 }
 \description{
@@ -47,31 +47,28 @@ and predicting disease risk. \emph{Microbiome}.
 }
 \examples{
 
-require(phyloseq)
+# require(phyloseq)
 
 ## Evaluation of MRS in terms of comparison between Healthy and Nonhealthy ##
 ## using ANCOMBC method and Shannon index
- discovery=GMHI[[1]];
+#  discovery=GMHI[[1]];
+# validation=GMHI[[2]];
 
- validation=GMHI[[2]];
-
- res=MRS(discovery, validation, GroupID="Group", DA.method="ancombc", measurement="shannon")
-
- AUC=res[[3]]
+# res=MRS(discovery, validation, GroupID="Group", DA.method="ancombc", measurement="shannon")
+#  AUC=res[[3]]
 
  ## using ALDEx2 method and Shannon index
 
- res=MRS(discovery, validation, GroupID="Group", DA.method="ALDEx2", measurement="shannon")
-
- AUC=res[[3]]
+# res=MRS(discovery, validation, GroupID="Group", DA.method="ALDEx2", measurement="shannon")
+# AUC=res[[3]]
 
 ## Evaluation of MRS in terms of comparison between Healthy and a specific disease ##
 ## Healthy vs. CA
 
- discovery.sub=prune_samples(sample_data(discovery)$Group1 \%in\% c("Healthy","CA"),discovery)
- validation.sub=prune_samples(sample_data(validation)$Group1 \%in\% c("Healthy","CA"),validation)
+# discovery.sub=prune_samples(sample_data(discovery)$Group1 \%in\% c("Healthy","CA"),discovery)
+# validation.sub=prune_samples(sample_data(validation)$Group1 \%in\% c("Healthy","CA"),validation)
 
- res=MRS(discovery.sub, validation.sub, GroupID="Group", DA.method="ALDEx2", measurement="shannon")
- AUC=res[[3]]
+# res=MRS(discovery.sub, validation.sub, GroupID="Group", DA.method="ALDEx2", measurement="shannon")
+# AUC=res[[3]]
 
 }
