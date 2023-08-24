@@ -37,32 +37,29 @@
 #'
 #' @examples
 #'
-#' require(phyloseq)
+#' # require(phyloseq)
 #'
 #' ## Evaluation of MRS in terms of comparison between Healthy and Nonhealthy ##
 #' ## using ANCOMBC method and Shannon index
-#'  discovery=GMHI[[1]];
+#' #  discovery=GMHI[[1]];
+#' # validation=GMHI[[2]];
 #'
-#'  validation=GMHI[[2]];
-#'
-#'  res=MRS(discovery, validation, GroupID="Group", DA.method="ancombc", measurement="shannon")
-#'
-#'  AUC=res[[3]]
+#' # res=MRS(discovery, validation, GroupID="Group", DA.method="ancombc", measurement="shannon")
+#' #  AUC=res[[3]]
 #'
 #'  ## using ALDEx2 method and Shannon index
 #'
-#'  res=MRS(discovery, validation, GroupID="Group", DA.method="ALDEx2", measurement="shannon")
-#'
-#'  AUC=res[[3]]
+#' # res=MRS(discovery, validation, GroupID="Group", DA.method="ALDEx2", measurement="shannon")
+#' # AUC=res[[3]]
 #'
 #' ## Evaluation of MRS in terms of comparison between Healthy and a specific disease ##
 #' ## Healthy vs. CA
 #'
-#'  discovery.sub=prune_samples(sample_data(discovery)$Group1 %in% c("Healthy","CA"),discovery)
-#'  validation.sub=prune_samples(sample_data(validation)$Group1 %in% c("Healthy","CA"),validation)
+#' # discovery.sub=prune_samples(sample_data(discovery)$Group1 %in% c("Healthy","CA"),discovery)
+#' # validation.sub=prune_samples(sample_data(validation)$Group1 %in% c("Healthy","CA"),validation)
 #'
-#'  res=MRS(discovery.sub, validation.sub, GroupID="Group", DA.method="ALDEx2", measurement="shannon")
-#'  AUC=res[[3]]
+#' # res=MRS(discovery.sub, validation.sub, GroupID="Group", DA.method="ALDEx2", measurement="shannon")
+#' # AUC=res[[3]]
 #'
 #'@importFrom magrittr "%>%"
 #'@import ANCOMBC
@@ -79,16 +76,12 @@ MRS=function(discovery.data, validation.data, GroupID,
   if(DA.method=="ancombc") {
 
   out = ancombc2(data = discovery.data, fix_formula = GroupID,
-                p_adj_method = "BH",  #zero_cut = 0.90, #lib_cut = 1000,
-                group = GroupID, struc_zero = TRUE, neg_lb = TRUE,
-                alpha = 0.05, global = FALSE)
+                group = GroupID)
 
   res0 = out$res
-  res = res0[,grep("p_",colnames(res0))[2]] %>% as.matrix() %>% data.frame()
 
-  colnames(res)="pvalue"
-  res$prank=rank(res$pvalue,ties.method ="min")
-  res$taxon=rownames(res0)}
+  res=data.frame(taxon=res0$taxon, pvalue=as.numeric(res0[,grep("p_",colnames(res0))[2]]))
+  res$prank=rank(res$pvalue,ties.method ="min")}
 
   if(DA.method=="ALDEx2") {
 
@@ -96,13 +89,12 @@ MRS=function(discovery.data, validation.data, GroupID,
     meta=sample_data(discovery.data)
 
     RA_clr=aldex.clr(reads=t(OTU),conds = as.character(unlist(meta[,GroupID])))
-    res=aldex.ttest(RA_clr)
+    res0=aldex.ttest(RA_clr)
 
 
-    res = res %>% as.matrix() %>% data.frame()
-    colnames(res)[1]="pvalue"
-    res$prank=rank(res$pvalue,ties.method ="min")
-    res$taxon=rownames(res) }
+    res0 = res0 %>% as.matrix() %>% data.frame()
+    res=data.frame(taxon=rownames(res0), pvalue=res0$we.ep)
+    res$prank=rank(res$pvalue,ties.method ="min") }
 
 
   if(DA.method=="Maaslin2") {
@@ -120,11 +112,10 @@ MRS=function(discovery.data, validation.data, GroupID,
       plot_scatter = FALSE)
 
 
-    res=res$results[,c("feature","pval")]
-    res = res %>% as.matrix() %>% data.frame()
-    colnames(res)[2]="pvalue"
-    res$prank=rank(res$pvalue,ties.method ="min")
-    colnames(res)[1]="taxon" }
+    res0=res$results[,c("feature","pval")]
+    res = res0 %>% as.matrix() %>% data.frame()
+    colnames(res)=c("taxon", "pvalue")
+    res$prank=rank(res$pvalue,ties.method ="min") }
 
 
   AUC.res=NULL
