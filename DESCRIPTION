@@ -11,7 +11,7 @@ License: GPL (>= 3)
 Encoding: UTF-8
 Enhances: sp
 LazyData: true
-Depends: R (>= 4.3.0)
+Depends: R (>= 4.2.0)
 Imports: 
     ALDEx2,
     ANCOMBC,
